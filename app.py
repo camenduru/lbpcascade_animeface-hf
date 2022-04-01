@@ -14,6 +14,11 @@ import gradio as gr
 import huggingface_hub
 import numpy as np
 
+ORIGINAL_REPO_URL = 'https://github.com/nagadomi/lbpcascade_animeface'
+TITLE = 'nagadomi/lbpcascade_animeface'
+DESCRIPTION = f'A demo for {ORIGINAL_REPO_URL}'
+ARTICLE = None
+
 TOKEN = os.environ['TOKEN']
 
 
@@ -63,8 +68,7 @@ def detect(image, detector: cv2.CascadeClassifier) -> np.ndarray:
     res = image.copy()
     for x, y, w, h in preds:
         cv2.rectangle(res, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    res = cv2.cvtColor(res, cv2.COLOR_BGR2RGB)
-    return res
+    return res[:, :, ::-1]
 
 
 def main():
@@ -79,20 +83,15 @@ def main():
     func = functools.partial(detect, detector=detector)
     func = functools.update_wrapper(func, detect)
 
-    repo_url = 'https://github.com/nagadomi/lbpcascade_animeface'
-    title = 'nagadomi/lbpcascade_animeface'
-    description = f'A demo for {repo_url}'
-    article = None
-
     gr.Interface(
         func,
         gr.inputs.Image(type='file', label='Input'),
-        gr.outputs.Image(label='Output'),
-        theme=args.theme,
-        title=title,
-        description=description,
-        article=article,
+        gr.outputs.Image(type='numpy', label='Output'),
         examples=examples,
+        title=TITLE,
+        description=DESCRIPTION,
+        article=ARTICLE,
+        theme=args.theme,
         allow_screenshot=args.allow_screenshot,
         allow_flagging=args.allow_flagging,
         live=args.live,
