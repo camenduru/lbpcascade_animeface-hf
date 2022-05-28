@@ -71,8 +71,6 @@ def detect(image, detector: cv2.CascadeClassifier) -> np.ndarray:
 
 
 def main():
-    gr.close_all()
-
     args = parse_args()
 
     image_paths = load_sample_image_paths()
