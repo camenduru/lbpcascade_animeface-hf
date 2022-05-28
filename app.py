@@ -16,7 +16,7 @@ import numpy as np
 
 TITLE = 'nagadomi/lbpcascade_animeface'
 DESCRIPTION = 'This is an unofficial demo for https://github.com/nagadomi/lbpcascade_animeface.'
-ARTICLE = None
+ARTICLE = '<center><img src="https://visitor-badge.glitch.me/badge?page_id=hysts.lbpcascade_animeface" alt="visitor badge"/></center>'
 
 TOKEN = os.environ['TOKEN']
 
