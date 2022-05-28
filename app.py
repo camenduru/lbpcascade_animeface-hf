@@ -14,9 +14,8 @@ import gradio as gr
 import huggingface_hub
 import numpy as np
 
-ORIGINAL_REPO_URL = 'https://github.com/nagadomi/lbpcascade_animeface'
 TITLE = 'nagadomi/lbpcascade_animeface'
-DESCRIPTION = f'A demo for {ORIGINAL_REPO_URL}'
+DESCRIPTION = 'This is an unofficial demo for https://github.com/nagadomi/lbpcascade_animeface.'
 ARTICLE = None
 
 TOKEN = os.environ['TOKEN']
