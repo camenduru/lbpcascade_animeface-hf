@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import functools
 import os
 import pathlib
@@ -16,22 +15,8 @@ import numpy as np
 
 TITLE = 'nagadomi/lbpcascade_animeface'
 DESCRIPTION = 'This is an unofficial demo for https://github.com/nagadomi/lbpcascade_animeface.'
-ARTICLE = '<center><img src="https://visitor-badge.glitch.me/badge?page_id=hysts.lbpcascade_animeface" alt="visitor badge"/></center>'
 
-TOKEN = os.environ['TOKEN']
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--theme', type=str)
-    parser.add_argument('--live', action='store_true')
-    parser.add_argument('--share', action='store_true')
-    parser.add_argument('--port', type=int)
-    parser.add_argument('--disable-queue',
-                        dest='enable_queue',
-                        action='store_false')
-    parser.add_argument('--allow-flagging', type=str, default='never')
-    return parser.parse_args()
+HF_TOKEN = os.getenv('HF_TOKEN')
 
 
 def load_sample_image_paths() -> list[pathlib.Path]:
@@ -41,7 +26,7 @@ def load_sample_image_paths() -> list[pathlib.Path]:
         path = huggingface_hub.hf_hub_download(dataset_repo,
                                                'images.tar.gz',
                                                repo_type='dataset',
-                                               use_auth_token=TOKEN)
+                                               use_auth_token=HF_TOKEN)
         with tarfile.open(path) as f:
             f.extractall()
     return sorted(image_dir.glob('*'))
@@ -55,47 +40,31 @@ def load_model() -> cv2.CascadeClassifier:
     return cv2.CascadeClassifier(path.as_posix())
 
 
-def detect(image, detector: cv2.CascadeClassifier) -> np.ndarray:
-    image = cv2.imread(image.name)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def detect(image_path: str, detector: cv2.CascadeClassifier) -> np.ndarray:
+    image_path = cv2.imread(image_path)
+    gray = cv2.cvtColor(image_path, cv2.COLOR_BGR2GRAY)
     preds = detector.detectMultiScale(gray,
                                       scaleFactor=1.1,
                                       minNeighbors=5,
                                       minSize=(24, 24))
 
-    res = image.copy()
+    res = image_path.copy()
     for x, y, w, h in preds:
         cv2.rectangle(res, (x, y), (x + w, y + h), (0, 255, 0), 2)
     return res[:, :, ::-1]
 
 
-def main():
-    args = parse_args()
+image_paths = load_sample_image_paths()
+examples = [[path.as_posix()] for path in image_paths]
 
-    image_paths = load_sample_image_paths()
-    examples = [[path.as_posix()] for path in image_paths]
+detector = load_model()
+func = functools.partial(detect, detector=detector)
 
-    detector = load_model()
-    func = functools.partial(detect, detector=detector)
-    func = functools.update_wrapper(func, detect)
-
-    gr.Interface(
-        func,
-        gr.inputs.Image(type='file', label='Input'),
-        gr.outputs.Image(type='numpy', label='Output'),
-        examples=examples,
-        title=TITLE,
-        description=DESCRIPTION,
-        article=ARTICLE,
-        theme=args.theme,
-        allow_flagging=args.allow_flagging,
-        live=args.live,
-    ).launch(
-        enable_queue=args.enable_queue,
-        server_port=args.port,
-        share=args.share,
-    )
-
-
-if __name__ == '__main__':
-    main()
+gr.Interface(
+    fn=func,
+    inputs=gr.Image(label='Input', type='filepath'),
+    outputs=gr.Image(label='Output', type='numpy'),
+    examples=examples,
+    title=TITLE,
+    description=DESCRIPTION,
+).queue().launch(show_api=False)
